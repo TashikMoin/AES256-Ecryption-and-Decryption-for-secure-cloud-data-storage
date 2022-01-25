@@ -7,14 +7,15 @@
 
 .logo{
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    width: 20%;
+    margin-left: 50px;
+    width: 35%;
 }
 
 .profile{
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    width: 80%;
+    width: 65%;
 }

@@ -2,12 +2,12 @@ import React from "react";
 import FileUploadStyles from "../../styles/FileUpload/FileUpload.module.css"
 import {useState, useEffect} from "react";
 import axios from "axios";
+import Image from "next/image"
 
 const chunkSize = 10 * 1024;
 
 
 const FileUpload = () => {
-
   const [dropzoneActive, setDropzoneActive] = useState(false);
   const [files, setFiles] = useState([]);
   const [currentFileIndex, setCurrentFileIndex] = useState(null);
@@ -49,7 +49,7 @@ const FileUpload = () => {
         const chunks = Math.ceil(filesize / chunkSize) - 1;
         const isLastChunk = currentChunkIndex === chunks;
         if (isLastChunk) {
-          file.finalFilename = response.data.finalFilename;
+          file.name = response.data.name;
           setLastUploadedFileIndex(currentFileIndex);
           setCurrentChunkIndex(null);
         } else {
@@ -97,8 +97,12 @@ const FileUpload = () => {
         onDragOver={e => {setDropzoneActive(true); e.preventDefault();}}
         onDragLeave={e => {setDropzoneActive(false); e.preventDefault();}}
         onDrop={e => handleDrop(e)}
-        className={"dropzone" + (dropzoneActive ? " active" : "")}>
-        Drop your files here
+        className={FileUploadStyles.dropzone}>
+        <Image src='/assets/drop.png' height={40} width={40}></Image>
+        
+        <div className={"dropzone" + (dropzoneActive ? " active" : "")}> 
+          Drop your files here 
+        </div>
       </div>
       <div className={FileUploadStyles.files}>
         {files.map((file,fileIndex) => {
@@ -115,12 +119,12 @@ const FileUpload = () => {
             }
           }
           return (
-            <a className={FileUploadStyles.file} target="_blank"
-               href={'http://localhost:5000/uploads/'+file.finalFilename}>
-              <div className={FileUploadStyles.name}>{file.name}</div>
-              <div className={"progress " + (progress === 100 ? 'done' : '')}
-                   style={{width:progress+'%'}}>{progress}%</div>
-            </a>
+            <div className={FileUploadStyles.progress}>
+              {file.name} 
+              <div style={{width:progress+'%', backgroundColor: '#3e3e3e'}}>
+                  {progress}
+              </div>
+            </div>
           );
         })}
       </div>
