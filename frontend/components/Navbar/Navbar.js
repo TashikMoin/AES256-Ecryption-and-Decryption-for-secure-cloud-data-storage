@@ -7,7 +7,7 @@ const Navbar = () => {
   return (
     <div className={NavbarStyles.navbar}>
         <div className={NavbarStyles.logo}>
-            <Image src="/assets/secure.png" height={40} width={40}></Image>
+            <Image src="/assets/secure.png" height={50} width={50}></Image>
             <h3 style={{marginLeft: '15px'}}> Secure Fileupload</h3>
         </div>
 
