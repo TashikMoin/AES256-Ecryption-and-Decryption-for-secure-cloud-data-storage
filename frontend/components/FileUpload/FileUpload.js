@@ -4,7 +4,7 @@ import {useState, useEffect} from "react";
 import axios from "axios";
 import Image from "next/image"
 
-const chunkSize = 10 * 1024;
+const chunkSize = 300 * 1024;
 
 
 const FileUpload = () => {
@@ -49,7 +49,7 @@ const FileUpload = () => {
         const chunks = Math.ceil(filesize / chunkSize) - 1;
         const isLastChunk = currentChunkIndex === chunks;
         if (isLastChunk) {
-          file.name = response.data.name;
+          file.finalFilename = response.data.finalFilename;
           setLastUploadedFileIndex(currentFileIndex);
           setCurrentChunkIndex(null);
         } else {
@@ -121,8 +121,8 @@ const FileUpload = () => {
           return (
             <div className={FileUploadStyles.progress}>
               {file.name} 
-              <div style={{width:progress+'%', backgroundColor: '#3e3e3e'}}>
-                  {progress}
+              <div style={{width:progress+'%', display:'flex', justifyContent: 'center', marginTop: '10px', borderRadius: '5%', backgroundColor: '#03b35e'}}>
+                {progress}%
               </div>
             </div>
           );

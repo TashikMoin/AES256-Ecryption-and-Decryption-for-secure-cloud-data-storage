@@ -15,17 +15,15 @@ app.post('/upload', (req, res) => {
   const firstChunk = parseInt(currentChunkIndex) === 0;
   const lastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks) -1;
   const data = req.body.toString().split(',')[1];
-  console.log('\nHereeeee\n');
-  console.log(data);
-  console.log('\n\n')
-  // do data encryption here
   const buffer = new Buffer(data, 'base64');
   if (firstChunk && fs.existsSync('./uploads/'+name)) {
     fs.unlinkSync('./uploads/'+name);
   }
   fs.appendFileSync('./uploads/'+name, buffer);
   if (lastChunk) {
-    res.json({name});
+    const finalFilename = name;
+    fs.renameSync('./uploads/'+name, './uploads/'+finalFilename);
+    res.json({finalFilename});
   } else {
     res.json('ok');
   }
