@@ -10,6 +10,11 @@
     "mime-types" "~2.1.24"
     "negotiator" "0.6.2"
 
+"aes256@^1.1.0":
+  "integrity" "sha512-JfjTA5HEpvnn4lX9lsfgPMiV6HYqefRmvUj5MScIUeaRCbWEIT8URNpKA9ddY9iWl+Ye9oUHrdusO1cDmS/tEQ=="
+  "resolved" "https://registry.npmjs.org/aes256/-/aes256-1.1.0.tgz"
+  "version" "1.1.0"
+
 "array-flatten@1.1.1":
   "integrity" "sha1-ml9pkFGx5wczKPKgCJaLZOopVdI="
   "resolved" "https://registry.npmjs.org/array-flatten/-/array-flatten-1.1.1.tgz"

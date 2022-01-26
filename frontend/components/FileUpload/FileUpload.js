@@ -41,7 +41,7 @@ const FileUpload = () => {
     params.set('currentChunkIndex', currentChunkIndex);
     params.set('totalChunks', Math.ceil(file.size / chunkSize));
     const headers = {'Content-Type': 'application/octet-stream'};
-    const url = 'http://localhost:5000/upload?'+params.toString();
+    const url = 'http://localhost:8080/upload?'+params.toString();
     axios.post(url, data, {headers})
       .then(response => {
         const file = files[currentFileIndex];

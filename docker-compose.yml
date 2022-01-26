@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+
+  backend:
+    build: './backend'
+    image: backend_image
+    deploy:
+      replicas: 1
+    ports:
+      - 8080:8080
+    volumes:
+      - './backend:/secureFileUpload/backend'
+    expose:
+      - 8080
+
+  frontend:
+    build: './frontend'
+    image: frontend_image
+    ports:
+      - 3000:3000
+    volumes:
+      - './frontend:/secureFileUpload/frontend'
+    expose:
+      - 3000
+
+  database:
+    image: mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - './database/secureFileUpload:/var/lib/mysql'
+      - './database/init/:/docker-entrypoint-initdb.d/:ro'
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    expose:
+      - 3306
+  # drop a <any name>.sql file containing the schema inside the init folder
