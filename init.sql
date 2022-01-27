@@ -7,9 +7,10 @@ CREATE TABLE `User` (
 );
 
 
+
 CREATE TABLE `File` (
     `Filename` VARCHAR(100) NOT NULL,
-    `Publickey` VARCHAR(500) NOT NULL,
+    `Publickey` VARCHAR(1000) NOT NULL,
     `Email` VARCHAR(45) NOT NULL,
     PRIMARY KEY (`Email`, `Filename`),
     FOREIGN KEY (`Email`) REFERENCES User(`Email`)

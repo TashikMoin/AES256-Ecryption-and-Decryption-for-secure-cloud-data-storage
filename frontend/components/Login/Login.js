@@ -8,18 +8,18 @@ import Button from '@mui/material/Button';
 
 const Login = (props) =>
 {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [Email, setEmail] = useState('');
+    const [Password, setPassword] = useState('');
 
     const loginUser = (event) => {
         event.preventDefault();
-        if( (email == '') || (password == '') ){
+        if( (Email == '') || (Password == '') ){
             alert(`Please fill all the required fields!`);
         }
         else{
             const credentials = { 
-                email: email,
-                password: password
+                Email: Email,
+                Password: Password
             };
             props.loginUserAction(credentials);
         }
@@ -42,7 +42,7 @@ const Login = (props) =>
                   id: "emailInput",
                   autoComplete: "on",
                 }}
-                value={email}
+                value={Email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 label="Email"
@@ -57,11 +57,11 @@ const Login = (props) =>
                   id: "passwordInput",
                   autoComplete: "off",
                 }}
-                value={password}
+                value={Password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 label="Password"
-                type="password"
+                type="Password"
                 fullWidth
                 size="small"
               />

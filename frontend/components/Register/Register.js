@@ -3,24 +3,32 @@ import registerStyles from "../../styles/Register/Register.module.css";
 import TextField from "@mui/material/TextField";
 import Image from "next/image"
 import Button from '@mui/material/Button';
+import Axios from 'axios'
 
 
 const Register = (props) =>
 {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [Email, setEmail] = useState('');
+    const [Password, setPassword] = useState('');
+    const [Firstname, setFirstname] = useState('');
+    const [Lastname, setLastname] = useState('');
 
-    const loginUser = (event) => {
+    Axios.defaults.withCredentials = true;
+    const registerUser = (event) => {
         event.preventDefault();
-        if( (email == '') || (password == '') ){
+        if( (Email == '') || (Password == '') || (Firstname == '') || (Lastname == '') ){
             alert(`Please fill all the required fields!`);
         }
         else{
-            const credentials = { 
-                email: email,
-                password: password
+            const Data = { 
+                Email: Email,
+                Password: Password,
+                Firstname: Firstname,
+                Lastname: Lastname
             };
-            props.loginUserAction(credentials);
+            Axios.post("http://localhost:8080/register", Data)
+            .then((response) => console.log(response))
+            .catch((error) => console.log(error));
         }
     };
 
@@ -38,8 +46,8 @@ const Register = (props) =>
 
             <div className={registerStyles.textinput}>
               <TextField
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={Firstname}
+                onChange={(e) => setFirstname(e.target.value)}
                 required
                 label="Firstname"
                 fullWidth
@@ -49,8 +57,8 @@ const Register = (props) =>
 
             <div className={registerStyles.textinput}>
               <TextField
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={Lastname}
+                onChange={(e) => setLastname(e.target.value)}
                 required
                 label="Lastname"
                 fullWidth
@@ -64,7 +72,7 @@ const Register = (props) =>
                   id: "emailInput",
                   autoComplete: "on",
                 }}
-                value={email}
+                value={Email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 label="Email"
@@ -79,11 +87,11 @@ const Register = (props) =>
                   id: "passwordInput",
                   autoComplete: "off",
                 }}
-                value={password}
+                value={Password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 label="Password"
-                type="password"
+                type="Password"
                 fullWidth
                 size="small"
               />
@@ -96,7 +104,7 @@ const Register = (props) =>
             </div>
 
             <div className={registerStyles.formfooterright}>
-            <Button variant="contained">Register</Button>
+            <Button onClick={(e) => registerUser(e)} variant="contained">Register</Button>
             </div>
           </div>
         </form>
