@@ -22,7 +22,7 @@ const database_connection = mysql.createPool(
         waitForConnections: true,
         connectionLimit: 100,
         queueLimit: 0,
-        port:'3306',
+        port:3306,
         connectTimeout: 20000,
         acquireTimeout: 20000
     }
@@ -33,6 +33,10 @@ const database_connection = mysql.createPool(
 
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({
+  extended: true
+}));
 app.use(bodyParser.raw({type:'application/octet-stream', limit:'100mb'}));
 app.use(cors({
   origin: 'http://localhost:3000',
@@ -40,7 +44,6 @@ app.use(cors({
   credentials: true
 }));
 app.use(cookieParser())
-app.use(bodyParser.urlencoded({ extended: true}));
 app.use(session({
   key: process.env.key,
   secret: process.env.secret,
@@ -48,9 +51,9 @@ app.use(session({
   saveUninitialized: false,
   cookie: { expires: 60 * 60 * 24,},
 }))
-
-
 app.use('/uploads', express.static('uploads'));
+
+
 
 
 app.post('/register', (req, res) => {
@@ -58,18 +61,28 @@ app.post('/register', (req, res) => {
   const Password = req.body.Password;
   const Firstname = req.body.Firstname;
   const Lastname = req.body.Lastname;
+
+  console.log(`${process.env.USER}   ${process.env.PASSWORD}    ${process.env.DATABASE}`);
   // 10 salt rounds
   bcrypt.hash(Password, 10, (error, hashedPassword) => 
   {
     if(error)
     {
       res.send({error: error});
+      return;
     }
-    database_connection.query(`INSERT INTO secureFileUpload.User (Firstname, Lastname, Email, Password) 
-    VALUES (${Firstname}, ${Lastname}, ${Email}, ${hashedPassword});`, 
+
+    const query = `INSERT INTO secureFileUpload.User (Firstname, Lastname, Email, Password) 
+    VALUES ('${Firstname}', '${Lastname}', '${Email}', '${hashedPassword}');`;
+
+    console.log("called");
+
+    database_connection.query(query, 
     (error,result) => {
-      if(error) { res.send({error: error})}
+      if(error) { res.status(200).send({error: error})}
+      else { res.status(200).send('User Registered!')}
     });
+    console.log("executed!");
   })
 
 
@@ -79,7 +92,7 @@ app.post('/register', (req, res) => {
 
 app.get('/login', (req, res) => {
   if(req.session.user){
-    res.send({ loggedIn: true, user: req.session.user});
+    res.status(200).send({ loggedIn: true, user: req.session.user});
   }
   else{
     res.send({ loggedIn: false});
@@ -92,7 +105,7 @@ app.post('/login', (req, res) => {
 
   database_connection.query(`SELECT * FROM USER WHERE Email = ?;`, Email, 
   (error,result) => {
-    if(error) { res.send({error: error})}
+    if(error) { res.send({error: error}); return;}
     if(result.length > 0)
     {
       bcrypt.compare(Password, result[0].Password, 
@@ -101,7 +114,7 @@ app.post('/login', (req, res) => {
         if(response)
         {
           request.session.user = result;
-          response.send(result);
+          response.status(200).send(result);
         }
         else
         {
@@ -152,9 +165,9 @@ app.post('/upload', (req, res) => {
   catch (error) {
       throw new Error(error.message);
   }
-  res.json({finalFilename});
+  res.status(200).json({finalFilename});
   } else {
-    res.json('ok');
+    res.status(200).json('ok');
   }
 });
 

@@ -4,12 +4,17 @@ import TextField from "@mui/material/TextField";
 import Link from "next/link";
 import Image from "next/image"
 import Button from '@mui/material/Button';
+import { useRouter } from 'next/router'
+import Axios from 'axios'
 
 
 const Login = (props) =>
 {
     const [Email, setEmail] = useState('');
     const [Password, setPassword] = useState('');
+    const router = useRouter();
+
+    Axios.defaults.withCredentials = true;
 
     const loginUser = (event) => {
         event.preventDefault();
@@ -21,7 +26,9 @@ const Login = (props) =>
                 Email: Email,
                 Password: Password
             };
-            props.loginUserAction(credentials);
+            Axios.post("http://localhost:8080/login", credentials)
+            .then((response) => router.push("/home"))
+            .catch((error) => console.log(error));
         }
     };
 
@@ -79,7 +86,7 @@ const Login = (props) =>
             </div>
 
             <div className={loginStyles.formfooterright}>
-            <Button variant="contained">Sign in</Button>
+            <Button onClick={(e)=>{loginUser(e)}} variant="contained">Sign in</Button>
             </div>
           </div>
         </form>

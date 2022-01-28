@@ -2,7 +2,7 @@ CREATE TABLE `User` (
     `Firstname` VARCHAR(40) NOT NULL,
     `Lastname` VARCHAR(40) NOT NULL,
     `Email` VARCHAR(45) NOT NULL,
-    `Password` VARCHAR(20) NOT NULL,
+    `Password` VARCHAR(1000) NOT NULL,
     PRIMARY KEY (`Email`)
 );
 

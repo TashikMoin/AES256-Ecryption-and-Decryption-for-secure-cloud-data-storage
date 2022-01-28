@@ -10,6 +10,7 @@ const Home = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const router = useRouter()
 
+  Axios.defaults.withCredentials = true;
   useEffect( () => {
     Axios.get("http://localhost:8080/login")
     .then((response) => {
@@ -20,7 +21,7 @@ const Home = () => {
     });
 
     if(currentUser == null){
-      router.push("/login");
+      router.push("/");
     }
   }, [])
 

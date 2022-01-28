@@ -4,6 +4,7 @@ import TextField from "@mui/material/TextField";
 import Image from "next/image"
 import Button from '@mui/material/Button';
 import Axios from 'axios'
+import { useRouter } from 'next/router'
 
 
 const Register = (props) =>
@@ -12,23 +13,25 @@ const Register = (props) =>
     const [Password, setPassword] = useState('');
     const [Firstname, setFirstname] = useState('');
     const [Lastname, setLastname] = useState('');
+    const router = useRouter()
 
     Axios.defaults.withCredentials = true;
-    const registerUser = (event) => {
+    const registerUser = async (event) => {
         event.preventDefault();
         if( (Email == '') || (Password == '') || (Firstname == '') || (Lastname == '') ){
             alert(`Please fill all the required fields!`);
         }
-        else{
-            const Data = { 
-                Email: Email,
-                Password: Password,
-                Firstname: Firstname,
-                Lastname: Lastname
-            };
-            Axios.post("http://localhost:8080/register", Data)
-            .then((response) => console.log(response))
-            .catch((error) => console.log(error));
+        else{      
+          const Data = { 
+              Email: Email,
+              Password: Password,
+              Firstname: Firstname,
+              Lastname: Lastname
+          };
+          await Axios.post("http://localhost:8080/register", Data)
+          .then((response) => { alert(`User Registered!`);  } )
+          .catch((error) => alert(error));
+          // router.push("/");
         }
     };
 
