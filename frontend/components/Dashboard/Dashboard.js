@@ -7,6 +7,10 @@ const Dashboard = () => {
   return (
     <div className={DashboardStyles.container}>
       <Card filename="abcd.txt"/>
+      <Card filename="abcd.txt"/>
+      <Card filename="abcd.txt"/>
+      <Card filename="abcd.txt"/>
+      <Card filename="abcd.txt"/>
     </div>
   );
 };
