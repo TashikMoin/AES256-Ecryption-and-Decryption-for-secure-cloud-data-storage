@@ -61,8 +61,6 @@ app.post('/register', (req, res) => {
   const Password = req.body.Password;
   const Firstname = req.body.Firstname;
   const Lastname = req.body.Lastname;
-
-  console.log(`${process.env.USER}   ${process.env.PASSWORD}    ${process.env.DATABASE}`);
   // 10 salt rounds
   bcrypt.hash(Password, 10, (error, hashedPassword) => 
   {
@@ -75,56 +73,52 @@ app.post('/register', (req, res) => {
     const query = `INSERT INTO secureFileUpload.User (Firstname, Lastname, Email, Password) 
     VALUES ('${Firstname}', '${Lastname}', '${Email}', '${hashedPassword}');`;
 
-    console.log("called");
-
     database_connection.query(query, 
     (error,result) => {
       if(error) { res.status(200).send({error: error})}
       else { res.status(200).send('User Registered!')}
     });
-    console.log("executed!");
   })
-
-
 
 });
 
 
 app.get('/login', (req, res) => {
   if(req.session.user){
-    res.status(200).send({ loggedIn: true, user: req.session.user});
+    res.status(200).send({ user: req.session.user});
   }
   else{
-    res.send({ loggedIn: false});
+    res.send({ user: false});
   }
 })
 
 app.post('/login', (req, res) => {
+  console.log("login route");
   const Email = req.body.Email;
   const Password = req.body.Password;
 
-  database_connection.query(`SELECT * FROM USER WHERE Email = ?;`, Email, 
+  database_connection.query(`SELECT * FROM User WHERE Email = ?;`, Email, 
   (error,result) => {
     if(error) { res.send({error: error}); return;}
     if(result.length > 0)
     {
       bcrypt.compare(Password, result[0].Password, 
-      (error, response) => 
+      (error, password_result) => 
       {
-        if(response)
+        if(password_result)
         {
-          request.session.user = result;
-          response.status(200).send(result);
+          req.session.user = result;
+          res.send(result);
         }
         else
         {
-          response.send(`Wrong Email or Password!`);
+          res.status(404).send(`Wrong Email or Password!\n ${error}`);
         }
       });
     }
     else
     {
-      response.send({Message: `User Does Not Exists!`});
+      res.status(404).send({Message: `User Does Not Exists!`});
     }
   })
 });

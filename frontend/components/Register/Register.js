@@ -29,7 +29,7 @@ const Register = (props) =>
               Lastname: Lastname
           };
           await Axios.post("http://localhost:8080/register", Data)
-          .then((response) => { alert(`User Registered!`);  } )
+          .then((response) => { alert(`User Registered!`); router.push("\\");  } )
           .catch((error) => alert(error));
           // router.push("/");
         }

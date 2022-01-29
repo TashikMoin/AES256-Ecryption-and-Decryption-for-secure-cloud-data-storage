@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import loginStyles from "../../styles/Login/Login.module.css";
 import TextField from "@mui/material/TextField";
 import Link from "next/link";
@@ -8,13 +8,35 @@ import { useRouter } from 'next/router'
 import Axios from 'axios'
 
 
-const Login = (props) =>
+const Login = () =>
 {
     const [Email, setEmail] = useState('');
     const [Password, setPassword] = useState('');
     const router = useRouter();
+    const [currentUser, setCurrentUser] = useState(null);
 
     Axios.defaults.withCredentials = true;
+    useEffect( async () => {
+      await Axios.get("http://localhost:8080/login")
+      .then((response) => {
+        // console.log(response.data.user[0]);
+        if(response.data.user[0])
+        {
+          const setUserState = async(user) => {
+            setCurrentUser(user);
+          }
+          console.log(currentUser);
+          setUserState(response.data.user[0]);
+        }
+      })
+      .catch((error) => { console.log(error); return; });
+      if(currentUser == null){
+        router.push("/");
+      }
+      else{
+        router.push("/home");
+      }
+    }, [])
 
     const loginUser = (event) => {
         event.preventDefault();
@@ -27,8 +49,8 @@ const Login = (props) =>
                 Password: Password
             };
             Axios.post("http://localhost:8080/login", credentials)
-            .then((response) => router.push("/home"))
-            .catch((error) => console.log(error));
+            .then((response) => {router.push("/home");})
+            .catch((error) => alert(error));
         }
     };
 

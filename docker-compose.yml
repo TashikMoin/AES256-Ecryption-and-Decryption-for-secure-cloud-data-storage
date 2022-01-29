@@ -32,8 +32,8 @@ services:
       - './database/secureFileUpload:/var/lib/mysql'
       - './database/init/:/docker-entrypoint-initdb.d/:ro'
     environment:
-      MYSQL_ROOT_PASSWORD: '12345'
-      MYSQL_DATABASE: 'secureFileUpload'
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     expose:
       - 3306
   # drop a <any name>.sql file containing the schema inside the init folder

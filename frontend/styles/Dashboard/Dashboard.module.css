@@ -1,0 +1,17 @@
+.container{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    background-color: black;
+}
+
+
+.card {
+    display: flex;
+    height: 200px;
+    width: 20%;
+    margin: 5px;
+    background-color: gray;
+}
+
