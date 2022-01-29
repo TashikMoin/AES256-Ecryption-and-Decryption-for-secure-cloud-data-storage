@@ -7,11 +7,11 @@ const Home = () => {
 
 
   return (
-    <>
+    <div style={{overflow: 'hidden'}}>
       <Navbar/>
       <FileUpload/>
       <Dashboard/>
-    </>
+    </div>
   );
 };
 
