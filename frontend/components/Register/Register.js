@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import registerStyles from "../../styles/Register/Register.module.css";
 import TextField from "@mui/material/TextField";
 import Image from "next/image"
@@ -16,6 +16,20 @@ const Register = (props) =>
     const router = useRouter()
 
     Axios.defaults.withCredentials = true;
+    useEffect(async () => {
+      await Axios.get("http://localhost:8080/login")
+        .then((response) => {
+          if (response) {
+            router.push("/home");
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          return;
+        });
+    }, []);
+
+
     const registerUser = async (event) => {
         event.preventDefault();
         if( (Email == '') || (Password == '') || (Firstname == '') || (Lastname == '') ){

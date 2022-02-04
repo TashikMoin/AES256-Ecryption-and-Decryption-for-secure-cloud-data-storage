@@ -7,9 +7,9 @@ import dotenv from "dotenv";
 dotenv.config();
 import mysql from "mysql2";
 import bcrypt from "bcrypt";
-import { request } from "http";
 import cookieParser from "cookie-parser";
-import session from "express-session";
+import jwt from "jsonwebtoken";
+
 
 const database_connection = mysql.createPool({
   host: "172.17.0.1", // always use this ip for host DO NOT USE LOCALHOST or mysql as host
@@ -69,21 +69,27 @@ app.post("/register", (req, res) => {
 });
 
 const getToken = () => {
+  // token = jwt.sign({ username: user.username,  role: user.role }, `${process.env.secret}`);
   return "cat";
 };
 
 app.get("/login", (req, res) => {
-  if (req.cookies.token === getToken()) {
+  if (req.cookies.token) {
+    const decoded = jwt.verify(req.cookies.token, `${process.env.secret}`);
     res
       .status(200)
-      .send({ message: "User is authorized!", user: [{ name: "johndoe" }] });
+      .send({ message: "User is authorized!", user: decoded });
   } else {
     res.status(401).send({ message: "User is unauthorized!" });
   }
 });
 
+
+app.get("/logout", (req, res) => {
+  res.status(202).clearCookie('token').send('cookie cleared');
+});
+
 app.post("/login", (req, res) => {
-  console.log("login route");
   const Email = req.body.Email;
   const Password = req.body.Password;
 
@@ -101,7 +107,8 @@ app.post("/login", (req, res) => {
           result[0].Password,
           (error, password_result) => {
             if (password_result) {
-              res.cookie("token", getToken());
+              let token = jwt.sign({ Username: result[0].Firstname+ ' ' + result[0].Lastname,  Email: result[0].Email }, `${process.env.secret}`);
+              res.cookie("token", token);
               res.send(result);
             } else {
               res.status(404).send(`Wrong Email or Password!\n ${error}`);

@@ -36,4 +36,5 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
     expose:
       - 3306
-  # drop a <any name>.sql file containing the schema inside the init folder
+
+# drop a <any name>.sql file containing the schema inside the init folder

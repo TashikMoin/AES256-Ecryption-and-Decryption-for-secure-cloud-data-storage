@@ -2,7 +2,8 @@ import React from "react";
 import DashboardStyles from "../../styles/Dashboard/Dashboard.module.css"
 import Card from "./Card"
 
-const Dashboard = () => {
+const Dashboard = ({user}) => {
+
 
   return (
     <div className={DashboardStyles.container}>

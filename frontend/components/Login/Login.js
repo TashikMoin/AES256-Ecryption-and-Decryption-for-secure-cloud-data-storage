@@ -16,8 +16,7 @@ const Login = () => {
   useEffect(async () => {
     await Axios.get("http://localhost:8080/login")
       .then((response) => {
-        // console.log(response.data.user[0]);
-        if (response.data.user[0]) {
+        if (response) {
           router.push("/home");
         }
       })
