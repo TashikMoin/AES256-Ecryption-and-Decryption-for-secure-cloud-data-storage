@@ -160,7 +160,6 @@ app.post("/upload", (req, res) => {
               console.log(err);
             }
           });
-          res.status(200).download("./tempPrivateKey.pem");
         }
         else{
           console.log(err);
@@ -169,7 +168,7 @@ app.post("/upload", (req, res) => {
     } catch (error) {
       throw new Error(error.message);
     }
-    res.status(200).json({ finalFilename });
+    res.status(200).download("./tempPrivateKey.pem");
   } else {
     res.status(200).json("ok");
   }
