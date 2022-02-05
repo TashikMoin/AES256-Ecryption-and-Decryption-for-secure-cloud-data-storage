@@ -71,6 +71,8 @@ app.post("/register", (req, res) => {
 });
 
 
+
+
 app.get("/login", (req, res) => {
   if (req.cookies.token) {
     const decoded = jwt.verify(req.cookies.token, `${process.env.secret}`);
@@ -173,5 +175,55 @@ app.post("/upload", (req, res) => {
     res.status(200).json("ok");
   }
 });
+
+
+
+app.get("/files", (req, res) => {
+
+  const { Email } = req.query;
+
+  database_connection.query(
+    `SELECT Filename FROM File WHERE Email = ?;`,
+    Email, (err, result) => {
+      if(result){
+        res.status(200).send({ files: result });
+      }
+      else if(err) {
+        res.status(401).send({ message: "Files not found!" });
+      }
+    });
+  
+});
+
+app.delete("/files", (req, res) => {
+
+  const { Email, Filename } = req.query;
+  fs.unlink("./uploads/"+Filename, (err, result) => {
+    if(!err){
+      database_connection.query(
+        `DELETE FROM File WHERE Email = ? AND Filename = ?;`,
+        [Email, Filename], (err, result) => {
+          if(result){
+            console.log("Result");
+            console.log(result);
+            res.status(200).send({ message: 'File Deleted!' });
+          }
+          else if(err) {
+            console.log("Error");
+            console.log(err);
+            res.status(401).send({ message: `${err}` });
+          }
+        });
+    }
+    else{
+      res.status(401).send({ message: "Error occured while deleting the file!" });
+    }
+  })
+  
+});
+
+
+
+
 
 app.listen(8080);
