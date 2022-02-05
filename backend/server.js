@@ -9,6 +9,8 @@ import mysql from "mysql2";
 import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
+import keypair from "keypair";
+import forge from "node-forge";
 
 
 const database_connection = mysql.createPool({
@@ -68,10 +70,6 @@ app.post("/register", (req, res) => {
   });
 });
 
-const getToken = () => {
-  // token = jwt.sign({ username: user.username,  role: user.role }, `${process.env.secret}`);
-  return "cat";
-};
 
 app.get("/login", (req, res) => {
   if (req.cookies.token) {
@@ -123,18 +121,24 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/upload", (req, res) => {
-  const { name, currentChunkIndex, totalChunks } = req.query;
+  const { name, currentChunkIndex, totalChunks, Email } = req.query;
   const firstChunk = parseInt(currentChunkIndex) === 0;
   const lastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks) - 1;
   const data = req.body.toString().split(",")[1];
-  var cipher = aes256.createCipher(process.env.key);
+  var pair = keypair(); 
+  var privateKey = pair.private;
+  /* using only private part of the pair and generating a public key from it and then 
+  storing the public key in the database and sending private to the client */
+  var bytePrivateKey = forge.pki.privateKeyFromPem(privateKey); 
+  // PEM to Byte format conversion
+  var publicKey  = forge.pki.setRsaPublicKey(bytePrivateKey.n, bytePrivateKey.e)
+  publicKey = forge.pki.publicKeyToPem(publicKey);
+  var cipher = aes256.createCipher(publicKey);
+  /* Encrypting data from the generated public key because AES256 is a symmetric key algorithm 
+  so using public key for encryption and decryption */
   var encryptedPlainText = cipher.encrypt(data);
-  // console.log(data);
-  // data is not actual plaintext, data ---> bytes, encryption bytes will be done
-  // console.log(encryptedPlainText);
-  var decryptedPlainText = cipher.decrypt(encryptedPlainText);
-  // console.log(decryptedPlainText);
-  const buffer = new Buffer(decryptedPlainText, "base64");
+  const buffer = new Buffer(data, "base64"); // replace data -> encryptedPlainText
+  // console.log(buffer.toString()); for real plaintext
   if (firstChunk && fs.existsSync("./uploads/" + name)) {
     fs.unlinkSync("./uploads/" + name);
   }
@@ -146,10 +150,21 @@ app.post("/upload", (req, res) => {
       throw new Error("Please fill the required data and try again.");
     }
     const query = `INSERT INTO secureFileUpload.File (Filename, Publickey, Email) 
-  VALUES ('${name}', 'public key here', 'tashikmoinsheikh@gmail.com');`;
+  VALUES ('${name}', '${publicKey}', '${Email}' );`;
     try {
       database_connection.query(query, (err, result) => {
-        console.log(err);
+        if(result){
+          fs.writeFile("tempPrivateKey.pem", privateKey, (err, result) => {
+            if(err)
+            {
+              console.log(err);
+            }
+          });
+          res.status(200).download("./tempPrivateKey.pem");
+        }
+        else{
+          console.log(err);
+        }
       });
     } catch (error) {
       throw new Error(error.message);

@@ -7,7 +7,7 @@ import Image from "next/image"
 const chunkSize = 300 * 1024;
 
 
-const FileUpload = () => {
+const FileUpload = ({user}) => {
   const [dropzoneActive, setDropzoneActive] = useState(false);
   const [files, setFiles] = useState([]);
   const [currentFileIndex, setCurrentFileIndex] = useState(null);
@@ -38,6 +38,7 @@ const FileUpload = () => {
     const params = new URLSearchParams();
     params.set('name', file.name);
     params.set('size', file.size);
+    params.set('Email', user.Email);
     params.set('currentChunkIndex', currentChunkIndex);
     params.set('totalChunks', Math.ceil(file.size / chunkSize));
     const headers = {'Content-Type': 'application/octet-stream'};
