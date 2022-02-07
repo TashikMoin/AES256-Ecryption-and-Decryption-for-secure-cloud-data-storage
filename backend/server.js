@@ -11,6 +11,7 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import keypair from "keypair";
 import forge from "node-forge";
+import fileUpload from "express-fileupload"
 
 
 const database_connection = mysql.createPool({
@@ -28,6 +29,7 @@ const database_connection = mysql.createPool({
 });
 
 const app = express();
+app.use(fileUpload());
 app.use(express.json());
 app.use(
   express.urlencoded({
@@ -127,50 +129,69 @@ app.post("/upload", (req, res) => {
   const firstChunk = parseInt(currentChunkIndex) === 0;
   const lastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks) - 1;
   const data = req.body.toString().split(",")[1];
-  var pair = keypair(); 
-  var privateKey = pair.private;
-  /* using only private part of the pair and generating a public key from it and then 
-  storing the public key in the database and sending private to the client */
-  var bytePrivateKey = forge.pki.privateKeyFromPem(privateKey); 
-  // PEM to Byte format conversion
-  var publicKey  = forge.pki.setRsaPublicKey(bytePrivateKey.n, bytePrivateKey.e)
-  publicKey = forge.pki.publicKeyToPem(publicKey);
-  var cipher = aes256.createCipher(publicKey);
-  /* Encrypting data from the generated public key because AES256 is a symmetric key algorithm 
-  so using public key for encryption and decryption */
-  var encryptedPlainText = cipher.encrypt(data);
   const buffer = new Buffer(data, "base64"); // replace data -> encryptedPlainText
   // console.log(buffer.toString()); for real plaintext
+
   if (firstChunk && fs.existsSync("./uploads/" + name)) {
     fs.unlinkSync("./uploads/" + name);
   }
   fs.appendFileSync("./uploads/" + name, buffer);
+
   if (lastChunk) {
     const finalFilename = name;
     fs.renameSync("./uploads/" + name, "./uploads/" + finalFilename);
-    if (!name) {
-      throw new Error("Please fill the required data and try again.");
-    }
-    const query = `INSERT INTO secureFileUpload.File (Filename, Publickey, Email) 
-  VALUES ('${name}', '${publicKey}', '${Email}' );`;
-    try {
-      database_connection.query(query, (err, result) => {
-        if(result){
-          fs.writeFile("tempPrivateKey.pem", privateKey, (err, result) => {
-            if(err)
-            {
-              console.log(err);
-            }
+      var pair = keypair(); 
+    var privateKey = pair.private;
+    /* using only private part of the pair and generating a public key from it and then 
+    storing the public key in the database and sending private to the client */
+    var bytePrivateKey = forge.pki.privateKeyFromPem(privateKey); 
+    // PEM to Byte format conversion
+    var publicKey  = forge.pki.setRsaPublicKey(bytePrivateKey.n, bytePrivateKey.e)
+    publicKey = forge.pki.publicKeyToPem(publicKey);
+
+    fs.readFile("./uploads/" + name, {encoding: 'utf-8'}, function(err,file_data){
+      if (!err) {
+          var cipher = aes256.createCipher(publicKey);
+          var encryptedPlainText = cipher.encrypt(file_data);
+          console.log(cipher.decrypt("owrmdTnvaEdCiB2NG1yDr0ZAhPoVqtJVs+vnSg=="));
+          fs.unlinkSync("./uploads/" + name);
+          var stream = fs.createWriteStream("./uploads/" + name);
+          stream.once('open', function(fd) {
+            stream.write(encryptedPlainText);
+            stream.end();
           });
-        }
-        else{
+          /* Encrypting data from the generated public key because AES256 is a symmetric key algorithm 
+          so using public key for encryption and decryption */
+      } else {
           console.log(err);
-        }
-      });
-    } catch (error) {
-      throw new Error(error.message);
-    }
-    res.status(200).download("./tempPrivateKey.pem");
+      }
+    });
+
+
+  
+  if (!name) {
+    throw new Error("Please fill the required data and try again.");
+  }
+  const query = `INSERT INTO secureFileUpload.File (Filename, Publickey, Email) 
+  VALUES ('${name}', '${publicKey}', '${Email}' );`;
+  try {
+    database_connection.query(query, (err, result) => {
+      if(result){
+        fs.writeFile("tempPrivateKey.pem", privateKey, (err, result) => {
+          if(err)
+          {
+            console.log(err);
+          }
+        });
+      }
+      else{
+        console.log(err);
+      }
+    });
+  } catch (error) {
+    throw new Error(error.message);
+  }
+  res.status(200).download("./tempPrivateKey.pem");
   } else {
     res.status(200).json("ok");
   }
@@ -204,12 +225,10 @@ app.delete("/files", (req, res) => {
         `DELETE FROM File WHERE Email = ? AND Filename = ?;`,
         [Email, Filename], (err, result) => {
           if(result){
-            console.log("Result");
             console.log(result);
             res.status(200).send({ message: 'File Deleted!' });
           }
           else if(err) {
-            console.log("Error");
             console.log(err);
             res.status(401).send({ message: `${err}` });
           }
@@ -224,6 +243,38 @@ app.delete("/files", (req, res) => {
 
 
 
+app.post("/verifykey", (req, res) => {
+  const { Email, Filename } = req.query;
+  if (req.files === null) {
+    return res.status(400).json({ msg: 'No file uploaded' });
+  }
+  const Key = req.files.File.data.toString();
+  database_connection.query(
+    `SELECT Publickey FROM File WHERE Email = ? AND Filename = ?;`,
+    [Email, Filename], (err, result) => {
+      if(!err){
+        var bytePrivateKey = forge.pki.privateKeyFromPem(Key); 
+        // PEM to Byte format conversion
+        var publicKey  = forge.pki.setRsaPublicKey(bytePrivateKey.n, bytePrivateKey.e)
+        publicKey = forge.pki.publicKeyToPem(publicKey);
+        console.log(result[0].Publickey);
+        console.log(publicKey);
+        console.log(Key);
+        if( result[0].Publickey == publicKey ) {
+          console.log("Key Matches");
+        }
+      }
+      else {
+        res.status(401).send({ message: "Files not found!" });
+      }
+    });
+});
+
+
 
 
 app.listen(8080);
+
+
+
+
