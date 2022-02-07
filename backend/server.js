@@ -153,11 +153,10 @@ app.post("/upload", (req, res) => {
       if (!err) {
           var cipher = aes256.createCipher(publicKey);
           var encryptedPlainText = cipher.encrypt(file_data);
-          console.log(cipher.decrypt("owrmdTnvaEdCiB2NG1yDr0ZAhPoVqtJVs+vnSg=="));
           fs.unlinkSync("./uploads/" + name);
           var stream = fs.createWriteStream("./uploads/" + name);
           stream.once('open', function(fd) {
-            stream.write(encryptedPlainText);
+            stream.write(encryptedPlainText); // or encryptedPlainText.toString()
             stream.end();
           });
           /* Encrypting data from the generated public key because AES256 is a symmetric key algorithm 
@@ -166,9 +165,6 @@ app.post("/upload", (req, res) => {
           console.log(err);
       }
     });
-
-
-  
   if (!name) {
     throw new Error("Please fill the required data and try again.");
   }
@@ -177,11 +173,10 @@ app.post("/upload", (req, res) => {
   try {
     database_connection.query(query, (err, result) => {
       if(result){
-        fs.writeFile("tempPrivateKey.pem", privateKey, (err, result) => {
-          if(err)
-          {
-            console.log(err);
-          }
+        var stream = fs.createWriteStream("tempPrivateKey.pem");
+        stream.once('open', function(fd) {
+          stream.write(privateKey); // or encryptedPlainText.toString()
+          stream.end();
         });
       }
       else{
@@ -191,7 +186,7 @@ app.post("/upload", (req, res) => {
   } catch (error) {
     throw new Error(error.message);
   }
-  res.status(200).download("./tempPrivateKey.pem");
+  res.status(200).download("tempPrivateKey.pem");
   } else {
     res.status(200).json("ok");
   }

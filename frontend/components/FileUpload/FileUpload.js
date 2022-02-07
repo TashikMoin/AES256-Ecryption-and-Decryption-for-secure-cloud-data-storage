@@ -3,6 +3,7 @@ import FileUploadStyles from "../../styles/FileUpload/FileUpload.module.css"
 import {useState, useEffect} from "react";
 import axios from "axios";
 import Image from "next/image"
+import { useRouter } from 'next/router'
 
 const chunkSize = 300 * 1024;
 
@@ -13,6 +14,7 @@ const FileUpload = ({user}) => {
   const [currentFileIndex, setCurrentFileIndex] = useState(null);
   const [lastUploadedFileIndex, setLastUploadedFileIndex] = useState(null);
   const [currentChunkIndex, setCurrentChunkIndex] = useState(null);
+  const router = useRouter();
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -50,9 +52,28 @@ const FileUpload = ({user}) => {
         const chunks = Math.ceil(filesize / chunkSize) - 1;
         const isLastChunk = currentChunkIndex === chunks;
         if (isLastChunk) {
-          file.finalFilename = response.data.finalFilename;
+          file.finalChunk = true;
+
+          // Start of file downloading code
+          const blob = new Blob([response.data], {type: "octet-stream"});
+          const href = URL.createObjectURL(blob);
+          const keyFileName = file.name.split('.').slice(0, -1).join('.');
+          const a = Object.assign(document.createElement("a"), {
+            href,
+            style: "display:none",
+            download: keyFileName+".pem"
+          });
+          document.body.appendChild(a);
+          a.click();
+          URL.revokeObjectURL(href);
+          a.remove();
+          // End of file downloading code
+
           setLastUploadedFileIndex(currentFileIndex);
           setCurrentChunkIndex(null);
+          if(currentFileIndex == files.length - 1){
+            router.reload();
+          }
         } else {
           setCurrentChunkIndex(currentChunkIndex + 1);
         }
@@ -108,7 +129,7 @@ const FileUpload = ({user}) => {
       <div className={FileUploadStyles.files}>
         {files.map((file,fileIndex) => {
           let progress = 0;
-          if (file.finalFilename) {
+          if (file.finalChunk) {
             progress = 100;
           } else {
             const uploading = fileIndex === currentFileIndex;

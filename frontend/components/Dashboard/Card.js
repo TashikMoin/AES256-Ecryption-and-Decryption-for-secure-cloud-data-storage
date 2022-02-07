@@ -9,6 +9,8 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PublishIcon from '@mui/icons-material/Publish';
+import Axios from 'axios'
+import { useRouter } from 'next/router'
 
 const style = {
     position: 'absolute',
@@ -23,11 +25,59 @@ const style = {
     p: 4,
   };
 
-const Card = ({filename}) => {
+const Card = ({filename, Email}) => {
 
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
+    const [selectedFile, setSelectedFile] = React.useState(null);
+    const router = useRouter()
+
+    const deleteFile = async () => {
+      const params = new URLSearchParams();
+      params.set('Email', Email);
+      params.set('Filename', filename);
+      await Axios.delete("http://localhost:8080/files?"+params.toString())
+        .then((response) => {
+          if (response) {
+            router.reload();
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+          return;
+        });
+    }
+
+    const handleFileSelect = (e) => {
+      setSelectedFile(e.target.files[0]);
+    }
+
+
+    const submitKey = async (event) => {
+      event.preventDefault();
+      const params = new URLSearchParams();
+      params.set('Email', Email);
+      params.set('Filename', filename);
+      const formData = new FormData();
+      formData.append('File', selectedFile);
+      for (var key of formData.entries()) {
+        console.log(key[0] + ', ' + key[1]);
+    }
+  
+      try {
+        const response = await Axios.post("http://localhost:8080/verifykey?"+params.toString(), formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }});
+      }
+      catch(error){
+        console.log(error);
+      }
+
+
+}
+
 
   return (
     <>
@@ -45,6 +95,7 @@ const Card = ({filename}) => {
           style={{margin: '15px 0px', backgroundColor: '#606060'}}
           variant="contained" 
           startIcon={<DeleteIcon />}
+          onClick={deleteFile}
         > 
           Delete
         </Button>
@@ -69,7 +120,7 @@ const Card = ({filename}) => {
           <Typography id="modal-modal-title" variant="h6" component="h2">
             Upload the private key of {filename}
           </Typography>
-        <input style={{marginTop: '10px'}} type="file"></input>
+        <input style={{marginTop: '10px'}} type="file" onChange={handleFileSelect} ></input>
 
         <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '15px'}}>
           <Button  
@@ -85,6 +136,7 @@ const Card = ({filename}) => {
             style={{margin: '15px 5px', backgroundColor: '#606060'}}
             variant="contained" 
             startIcon={<PublishIcon/>}
+            onClick={submitKey}
           > 
             Submit
           </Button>
