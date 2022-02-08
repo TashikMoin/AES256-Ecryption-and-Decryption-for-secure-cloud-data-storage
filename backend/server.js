@@ -129,7 +129,7 @@ app.post("/upload", (req, res) => {
   const firstChunk = parseInt(currentChunkIndex) === 0;
   const lastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks) - 1;
   const data = req.body.toString().split(",")[1];
-  const buffer = new Buffer(data, "base64"); // replace data -> encryptedPlainText
+  const buffer = new Buffer(data, "base64"); 
   // console.log(buffer.toString()); for real plaintext
 
   if (firstChunk && fs.existsSync("./uploads/" + name)) {
@@ -149,14 +149,18 @@ app.post("/upload", (req, res) => {
     var publicKey  = forge.pki.setRsaPublicKey(bytePrivateKey.n, bytePrivateKey.e)
     publicKey = forge.pki.publicKeyToPem(publicKey);
 
-    fs.readFile("./uploads/" + name, {encoding: 'utf-8'}, function(err,file_data){
+    fs.readFile("./uploads/" + name, function(err,file_data){
       if (!err) {
           var cipher = aes256.createCipher(publicKey);
-          var encryptedPlainText = cipher.encrypt(file_data);
+          var data = file_data.toString();
+          var encryptedPlainText = cipher.encrypt(data); //
           fs.unlinkSync("./uploads/" + name);
+          const buffer = new Buffer(encryptedPlainText, "base64");
+          fs.appendFileSync("./uploads/" + name, buffer);
           var stream = fs.createWriteStream("./uploads/" + name);
           stream.once('open', function(fd) {
-            stream.write(encryptedPlainText); // or encryptedPlainText.toString()
+            const buffer = new Buffer(encryptedPlainText, "base64");
+            stream.write(buffer); // or encryptedPlainText.toString()
             stream.end();
           });
           /* Encrypting data from the generated public key because AES256 is a symmetric key algorithm 
@@ -173,10 +177,8 @@ app.post("/upload", (req, res) => {
   try {
     database_connection.query(query, (err, result) => {
       if(result){
-        var stream = fs.createWriteStream("tempPrivateKey.pem");
-        stream.once('open', function(fd) {
-          stream.write(privateKey); // or encryptedPlainText.toString()
-          stream.end();
+        fs.writeFile('./tempPrivateKey.pem', privateKey, { "flag": 'w+' }, err => {
+          res.status(200).download("./tempPrivateKey.pem");
         });
       }
       else{
@@ -186,7 +188,6 @@ app.post("/upload", (req, res) => {
   } catch (error) {
     throw new Error(error.message);
   }
-  res.status(200).download("tempPrivateKey.pem");
   } else {
     res.status(200).json("ok");
   }
@@ -247,16 +248,22 @@ app.post("/verifykey", (req, res) => {
   database_connection.query(
     `SELECT Publickey FROM File WHERE Email = ? AND Filename = ?;`,
     [Email, Filename], (err, result) => {
-      if(!err){
+      if(!err){ 
         var bytePrivateKey = forge.pki.privateKeyFromPem(Key); 
         // PEM to Byte format conversion
         var publicKey  = forge.pki.setRsaPublicKey(bytePrivateKey.n, bytePrivateKey.e)
         publicKey = forge.pki.publicKeyToPem(publicKey);
-        console.log(result[0].Publickey);
-        console.log(publicKey);
-        console.log(Key);
+        // result[0].Publickey ---> public key from database
+        // publicKey ---> newly calculated public key from given private key
         if( result[0].Publickey == publicKey ) {
-          console.log("Key Matches");
+          var cipher = aes256.createCipher(publicKey);
+          fs.readFile("./uploads/" + Filename, (err, result) => {
+            var plaintext = cipher.decrypt(result.toString()); 
+            const buffer = new Buffer(plaintext, "base64");
+            fs.writeFile("./Temp." + Filename.split('.').pop(), buffer, { "flag": 'w+' }, (err) => {
+              res.status(200).download("./Temp." + Filename.split('.').pop());
+            });
+          });
         }
       }
       else {

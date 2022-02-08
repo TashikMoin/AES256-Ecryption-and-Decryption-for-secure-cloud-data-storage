@@ -66,10 +66,25 @@ const Card = ({filename, Email}) => {
     }
   
       try {
-        const response = await Axios.post("http://localhost:8080/verifykey?"+params.toString(), formData, {
+        await Axios.post("http://localhost:8080/verifykey?"+params.toString(), formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
-          }});
+          }}).then((response) => {
+            console.log(response);
+            const blob = new Blob([response.data], {type: "octet-stream"});
+            const href = URL.createObjectURL(blob);
+            const a = Object.assign(document.createElement("a"), {
+              href,
+              style: "display:none",
+              download: filename
+            });
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(href);
+            a.remove();
+          }).catch((error) => {
+            alert(error);
+          });
       }
       catch(error){
         console.log(error);
