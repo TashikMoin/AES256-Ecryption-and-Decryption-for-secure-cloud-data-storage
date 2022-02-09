@@ -11,7 +11,8 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import keypair from "keypair";
 import forge from "node-forge";
-import fileUpload from "express-fileupload"
+import fileUpload from "express-fileupload";
+import arrayBufferToString from "arraybuffer-to-string";
 
 
 const database_connection = mysql.createPool({
@@ -129,7 +130,9 @@ app.post("/upload", (req, res) => {
   const firstChunk = parseInt(currentChunkIndex) === 0;
   const lastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks) - 1;
   const data = req.body.toString().split(",")[1];
+  console.log("Hereeeeeee");
   const buffer = new Buffer(data, "base64"); 
+  console.log(buffer);
   // console.log(buffer.toString()); for real plaintext
 
   if (firstChunk && fs.existsSync("./uploads/" + name)) {
@@ -152,17 +155,21 @@ app.post("/upload", (req, res) => {
     fs.readFile("./uploads/" + name, function(err,file_data){
       if (!err) {
           var cipher = aes256.createCipher(publicKey);
+          console.log(file_data);
           var data = file_data.toString();
+          console.log(data);
           var encryptedPlainText = cipher.encrypt(data); //
+          console.log(encryptedPlainText);
           fs.unlinkSync("./uploads/" + name);
           const buffer = new Buffer(encryptedPlainText, "base64");
+          console.log(buffer);
           fs.appendFileSync("./uploads/" + name, buffer);
-          var stream = fs.createWriteStream("./uploads/" + name);
-          stream.once('open', function(fd) {
-            const buffer = new Buffer(encryptedPlainText, "base64");
-            stream.write(buffer); // or encryptedPlainText.toString()
-            stream.end();
-          });
+          // var stream = fs.createWriteStream("./uploads/" + name);
+          // stream.once('open', function(fd) {
+          //   const buffer = new Buffer(encryptedPlainText, "base64");
+          //   stream.write(buffer); // or encryptedPlainText.toString()
+          //   stream.end();
+          // });
           /* Encrypting data from the generated public key because AES256 is a symmetric key algorithm 
           so using public key for encryption and decryption */
       } else {
@@ -258,13 +265,18 @@ app.post("/verifykey", (req, res) => {
         if( result[0].Publickey == publicKey ) {
           var cipher = aes256.createCipher(publicKey);
           fs.readFile("./uploads/" + Filename, (err, result) => {
-            var plaintext = cipher.decrypt(result.toString()); 
+            console.log("-----------------------------");
+            console.log(result);
+            console.log(result.toString("base64"));
+            var plaintext = cipher.decrypt(result.toString("base64"));    
+            console.log("here-");
+            console.log(plaintext);
             const buffer = new Buffer(plaintext, "base64");
-            fs.writeFile("./Temp." + Filename.split('.').pop(), buffer, { "flag": 'w+' }, (err) => {
+            fs.writeFile("./Temp." + Filename.split('.').pop(), plaintext, { "flag": 'w+' }, (err) => {
               res.status(200).download("./Temp." + Filename.split('.').pop());
             });
           });
-        }
+        } 
       }
       else {
         res.status(401).send({ message: "Files not found!" });

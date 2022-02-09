@@ -124,6 +124,11 @@
   "resolved" "https://registry.npmjs.org/array-flatten/-/array-flatten-1.1.1.tgz"
   "version" "1.1.1"
 
+"arraybuffer-to-string@^1.0.2":
+  "integrity" "sha512-WbIYlLVmvIAyUBdQRRuyGOJRriOQy9OAsWcyURmsRQp9+g647hdMSS2VFKXbJLVw0daUu06hqwLXm9etVrXI9A=="
+  "resolved" "https://registry.npmjs.org/arraybuffer-to-string/-/arraybuffer-to-string-1.0.2.tgz"
+  "version" "1.0.2"
+
 "balanced-match@^1.0.0":
   "integrity" "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="
   "resolved" "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz"
