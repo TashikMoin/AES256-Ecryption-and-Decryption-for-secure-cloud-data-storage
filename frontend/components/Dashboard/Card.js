@@ -76,7 +76,7 @@ const Card = ({filename, Email}) => {
             const a = Object.assign(document.createElement("a"), {
               href,
               style: "display:none",
-              download: filename
+              download: filename 
             });
             document.body.appendChild(a);
             a.click();

@@ -12,7 +12,6 @@ import jwt from "jsonwebtoken";
 import keypair from "keypair";
 import forge from "node-forge";
 import fileUpload from "express-fileupload";
-import arrayBufferToString from "arraybuffer-to-string";
 
 
 const database_connection = mysql.createPool({
@@ -129,6 +128,9 @@ app.post("/upload", (req, res) => {
   const { name, currentChunkIndex, totalChunks, Email } = req.query;
   const firstChunk = parseInt(currentChunkIndex) === 0;
   const lastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks) - 1;
+  console.log(req.body);
+  console.log(typeof(req.body));
+  console.log(req.body.toString());
   const data = req.body.toString().split(",")[1];
   console.log("Hereeeeeee");
   const buffer = new Buffer(data, "base64"); 
@@ -152,13 +154,14 @@ app.post("/upload", (req, res) => {
     var publicKey  = forge.pki.setRsaPublicKey(bytePrivateKey.n, bytePrivateKey.e)
     publicKey = forge.pki.publicKeyToPem(publicKey);
 
-    fs.readFile("./uploads/" + name, function(err,file_data){
+    fs.readFile("./uploads/" + name, {encoding: "base64"}, function(err,file_data){
       if (!err) {
           var cipher = aes256.createCipher(publicKey);
+          console.log("GG");
           console.log(file_data);
           var data = file_data.toString();
           console.log(data);
-          var encryptedPlainText = cipher.encrypt(data); //
+          var encryptedPlainText = cipher.encrypt(file_data); //
           console.log(encryptedPlainText);
           fs.unlinkSync("./uploads/" + name);
           const buffer = new Buffer(encryptedPlainText, "base64");
@@ -271,8 +274,12 @@ app.post("/verifykey", (req, res) => {
             var plaintext = cipher.decrypt(result.toString("base64"));    
             console.log("here-");
             console.log(plaintext);
-            const buffer = new Buffer(plaintext, "base64");
-            fs.writeFile("./Temp." + Filename.split('.').pop(), plaintext, { "flag": 'w+' }, (err) => {
+            const buffer = new Buffer(plaintext, "base64"); 
+            console.log(buffer);
+            // masla idher ha encoding ka works fine for text files
+            fs.writeFile("./Temp." + Filename.split('.').pop(), buffer, { "flag": 'w+' }, (err) => {
+              console.log(err);
+              
               res.status(200).download("./Temp." + Filename.split('.').pop());
             });
           });
