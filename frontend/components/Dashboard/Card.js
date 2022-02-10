@@ -11,7 +11,8 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import PublishIcon from '@mui/icons-material/Publish';
 import Axios from 'axios'
 import { useRouter } from 'next/router'
-
+import JsFileDownloader from 'js-file-downloader';
+ 
 const style = {
     position: 'absolute',
     top: '50%',
@@ -73,26 +74,23 @@ const Card = ({filename, Email}) => {
             'Content-Type': 'multipart/form-data'
           }}).then(async (response) => {
 
-            await Axios.get("http://localhost:8080/download?"+params.toString(), {
-            headers: { 
-              'Content-Type': 'octet-stream',
-              'Content-Disposition' : `attachment; filename=${filename}` 
-            },
-          }).then((res) => {
-            const blob = new Blob([res.data], {type: 'octet-stream'});
-            const href = URL.createObjectURL(blob);
-            const a = Object.assign(document.createElement("a"), {
-              href,
-              style: "display:none",
-              download: filename 
+            new JsFileDownloader({ 
+              url: "http://localhost:8080/download?"+params.toString(),
+              contentType: 'multipart/form-data;',
+              autoStart: true,
+              nameCallback: function(name) {
+                return filename;
+              }
+            })
+            .then((res) => {
+              alert("File Downloaded");
+              router.reload();
+            })
+            .catch( (err) => {       
+              console.log("Error");
             });
-            document.body.appendChild(a);
-            a.click(); 
-            URL.revokeObjectURL(href);
-            a.remove();
-          }).catch((err) => {
-            alert(`${err}`);
-          });
+
+
           }).catch((error) => {
             alert(error);
           });
