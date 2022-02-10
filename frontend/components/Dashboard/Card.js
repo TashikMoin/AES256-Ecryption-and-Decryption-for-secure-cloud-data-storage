@@ -57,8 +57,6 @@ const Card = ({filename, Email}) => {
 
     const submitKey = async (event) => {
       event.preventDefault();
-      // console.log(selectedFile.type);
-      // console.log(response.headers["content-type"]);
       const params = new URLSearchParams();
       params.set('Email', Email);
       params.set('Filename', filename);
@@ -87,7 +85,7 @@ const Card = ({filename, Email}) => {
               router.reload();
             })
             .catch( (err) => {       
-              console.log("Error");
+              alert("Error");
             });
 
 
@@ -96,7 +94,7 @@ const Card = ({filename, Email}) => {
           });
       }
       catch(error){
-        console.log(error);
+        alert(error);
       }
 
 

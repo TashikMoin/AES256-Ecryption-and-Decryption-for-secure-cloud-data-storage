@@ -128,15 +128,8 @@ app.post("/upload", (req, res) => {
   const { name, currentChunkIndex, totalChunks, Email } = req.query;
   const firstChunk = parseInt(currentChunkIndex) === 0;
   const lastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks) - 1;
-  console.log(req.body);
-  // console.log(typeof(req.body));
-  // console.log(req.body.toString());
   const data = req.body.toString().split(",")[1];
-  // console.log("Hereeeeeee");
   const buffer = new Buffer(data, "base64"); 
-  // console.log(buffer);
-  // console.log(buffer.toString()); for real plaintext
-
   if (firstChunk && fs.existsSync("./uploads/" + name)) {
     fs.unlinkSync("./uploads/" + name);
   }
@@ -157,25 +150,13 @@ app.post("/upload", (req, res) => {
     fs.readFile("./uploads/" + name, {encoding: "base64"}, function(err,file_data){
       if (!err) {
           var cipher = aes256.createCipher(publicKey);
-          // console.log("GG");
-          // console.log(file_data);
-          // var data = file_data.toString();
-          // console.log(data);
-          var encryptedPlainText = cipher.encrypt(file_data); //
-          // console.log(encryptedPlainText);
+          var encryptedPlainText = cipher.encrypt(file_data); 
           fs.unlinkSync("./uploads/" + name);
           const buffer = new Buffer(encryptedPlainText, "base64");
-          // console.log(buffer);
           fs.appendFileSync("./uploads/" + name, buffer);
-          // var stream = fs.createWriteStream("./uploads/" + name);
-          // stream.once('open', function(fd) {
-          //   const buffer = new Buffer(encryptedPlainText, "base64");
-          //   stream.write(buffer); // or encryptedPlainText.toString()
-          //   stream.end();
-          // });
           /* Encrypting data from the generated public key because AES256 is a symmetric key algorithm 
           so using public key for encryption and decryption */
-      } else {
+      } else { 
           console.log(err);
       }
     });
@@ -188,7 +169,12 @@ app.post("/upload", (req, res) => {
     database_connection.query(query, (err, result) => {
       if(result){
         fs.writeFile('./tempPrivateKey.pem', privateKey, { "flag": 'w+' }, err => {
-          res.status(200).download("./tempPrivateKey.pem");
+          res.status(200).download("./tempPrivateKey.pem", (err) => {
+            if(err){
+              res.status(401).send({ message: "Key File not found!" });
+            }
+            fs.unlinkSync("./tempPrivateKey.pem");
+          });
         });
       }
       else{
@@ -248,6 +234,24 @@ app.delete("/files", (req, res) => {
 });
 
 
+const fileToBuffer = (filename, cb) => {
+  let readStream = fs.createReadStream(filename);
+  let chunks = [];
+
+  readStream.on('error', err => {
+      return cb(err);
+  });
+
+  readStream.on('data', chunk => {
+      chunks.push(chunk);
+  });
+
+  readStream.on('close', () => {
+      return cb(null, Buffer.concat(chunks));
+  });
+}
+
+
 
 app.post("/verifykey", async (req, res) => {
   const { Email, Filename } = req.query;
@@ -267,19 +271,20 @@ app.post("/verifykey", async (req, res) => {
         // publicKey ---> newly calculated public key from given private key
         if( result[0].Publickey == publicKey ) {
           var cipher = aes256.createCipher(publicKey);
-          fs.readFile("./uploads/" + Filename, (err, result) => {
-            // console.log("-----------------------------");
-            // console.log(result);
-            // console.log(result.toString("base64"));
-            var plaintext = cipher.decrypt(result.toString("base64"));    
-            // console.log("here-");
-            // console.log(plaintext);
+          fileToBuffer("./uploads/" + Filename, (err, output) => {
+            console.log(output);
+            var plaintext = cipher.decrypt(output.toString("base64"));    
             const buffer = new Buffer(plaintext, "base64"); 
-            // console.log(buffer);
-            // masla idher ha encoding ka works fine for text files
             fs.writeFileSync("./Temp." + Filename.split('.').pop(), buffer, { "flag": 'w+' });
             res.status(200).send({ message: "Verified" });
-          });
+          }); 
+
+          // fs.readFile("./uploads/" + Filename, (err, res) => {
+          //   var plaintext = cipher.decrypt(res.toString("base64"));    
+          //   const buffer = new Buffer(plaintext, "base64"); 
+          //   fs.writeFileSync("./Temp." + Filename.split('.').pop(), buffer, { "flag": 'w+' });
+          //   res.status(200).send({ message: "Verified" });
+          // });
         } 
       }
       else {
@@ -292,7 +297,12 @@ app.post("/verifykey", async (req, res) => {
 app.get("/download", (req, res) => {
   const { Filename } = req.query;
   try{
-    res.status(200).download("./Temp." + Filename.split('.').pop());
+    res.status(200).download("./Temp." + Filename.split('.').pop(), (err) => {
+      if(err){
+        res.status(401).send({ message: "File not found!" });
+      }
+      fs.unlinkSync("./Temp." + Filename.split('.').pop());
+    });
   }
   catch(err){
     res.status(401).send({ message: "Files not found!" });
