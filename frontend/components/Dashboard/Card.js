@@ -56,6 +56,8 @@ const Card = ({filename, Email}) => {
 
     const submitKey = async (event) => {
       event.preventDefault();
+      // console.log(selectedFile.type);
+      // console.log(response.headers["content-type"]);
       const params = new URLSearchParams();
       params.set('Email', Email);
       params.set('Filename', filename);
@@ -69,9 +71,15 @@ const Card = ({filename, Email}) => {
         await Axios.post("http://localhost:8080/verifykey?"+params.toString(), formData, {
           headers: {
             'Content-Type': 'multipart/form-data'
-          }}).then((response) => {
-            console.log(response);
-            const blob = new Blob([response.data], {type: "octet-stream"});
+          }}).then(async (response) => {
+
+            await Axios.get("http://localhost:8080/download?"+params.toString(), {
+            headers: { 
+              'Content-Type': 'octet-stream',
+              'Content-Disposition' : `attachment; filename=${filename}` 
+            },
+          }).then((res) => {
+            const blob = new Blob([res.data], {type: 'octet-stream'});
             const href = URL.createObjectURL(blob);
             const a = Object.assign(document.createElement("a"), {
               href,
@@ -79,9 +87,12 @@ const Card = ({filename, Email}) => {
               download: filename 
             });
             document.body.appendChild(a);
-            a.click();
+            a.click(); 
             URL.revokeObjectURL(href);
             a.remove();
+          }).catch((err) => {
+            alert(`${err}`);
+          });
           }).catch((error) => {
             alert(error);
           });

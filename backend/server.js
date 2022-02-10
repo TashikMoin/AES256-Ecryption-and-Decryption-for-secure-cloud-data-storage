@@ -129,12 +129,12 @@ app.post("/upload", (req, res) => {
   const firstChunk = parseInt(currentChunkIndex) === 0;
   const lastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks) - 1;
   console.log(req.body);
-  console.log(typeof(req.body));
-  console.log(req.body.toString());
+  // console.log(typeof(req.body));
+  // console.log(req.body.toString());
   const data = req.body.toString().split(",")[1];
-  console.log("Hereeeeeee");
+  // console.log("Hereeeeeee");
   const buffer = new Buffer(data, "base64"); 
-  console.log(buffer);
+  // console.log(buffer);
   // console.log(buffer.toString()); for real plaintext
 
   if (firstChunk && fs.existsSync("./uploads/" + name)) {
@@ -157,15 +157,15 @@ app.post("/upload", (req, res) => {
     fs.readFile("./uploads/" + name, {encoding: "base64"}, function(err,file_data){
       if (!err) {
           var cipher = aes256.createCipher(publicKey);
-          console.log("GG");
-          console.log(file_data);
-          var data = file_data.toString();
-          console.log(data);
+          // console.log("GG");
+          // console.log(file_data);
+          // var data = file_data.toString();
+          // console.log(data);
           var encryptedPlainText = cipher.encrypt(file_data); //
-          console.log(encryptedPlainText);
+          // console.log(encryptedPlainText);
           fs.unlinkSync("./uploads/" + name);
           const buffer = new Buffer(encryptedPlainText, "base64");
-          console.log(buffer);
+          // console.log(buffer);
           fs.appendFileSync("./uploads/" + name, buffer);
           // var stream = fs.createWriteStream("./uploads/" + name);
           // stream.once('open', function(fd) {
@@ -249,7 +249,7 @@ app.delete("/files", (req, res) => {
 
 
 
-app.post("/verifykey", (req, res) => {
+app.post("/verifykey", async (req, res) => {
   const { Email, Filename } = req.query;
   if (req.files === null) {
     return res.status(400).json({ msg: 'No file uploaded' });
@@ -268,20 +268,17 @@ app.post("/verifykey", (req, res) => {
         if( result[0].Publickey == publicKey ) {
           var cipher = aes256.createCipher(publicKey);
           fs.readFile("./uploads/" + Filename, (err, result) => {
-            console.log("-----------------------------");
-            console.log(result);
-            console.log(result.toString("base64"));
+            // console.log("-----------------------------");
+            // console.log(result);
+            // console.log(result.toString("base64"));
             var plaintext = cipher.decrypt(result.toString("base64"));    
-            console.log("here-");
-            console.log(plaintext);
+            // console.log("here-");
+            // console.log(plaintext);
             const buffer = new Buffer(plaintext, "base64"); 
-            console.log(buffer);
+            // console.log(buffer);
             // masla idher ha encoding ka works fine for text files
-            fs.writeFile("./Temp." + Filename.split('.').pop(), buffer, { "flag": 'w+' }, (err) => {
-              console.log(err);
-              
-              res.status(200).download("./Temp." + Filename.split('.').pop());
-            });
+            fs.writeFileSync("./Temp." + Filename.split('.').pop(), buffer, { "flag": 'w+' });
+            res.status(200).send({ message: "Verified" });
           });
         } 
       }
@@ -292,6 +289,15 @@ app.post("/verifykey", (req, res) => {
 });
 
 
+app.get("/download", (req, res) => {
+  const { Filename } = req.query;
+  try{
+    res.status(200).download("./Temp." + Filename.split('.').pop());
+  }
+  catch(err){
+    res.status(401).send({ message: "Files not found!" });
+  }
+});
 
 
 app.listen(8080);
