@@ -15,6 +15,8 @@ services:
   frontend:
     build: './frontend'
     image: frontend_image
+    deploy:
+      replicas: 5
     ports:
       - 3000:3000
     volumes:
