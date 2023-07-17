@@ -7,8 +7,6 @@ services:
     image: backend_image
     deploy:
       replicas: 1
-    ports:
-      - 8080:8080
     volumes:
       - './backend:/secureFileUpload/backend'
     expose:
@@ -26,8 +24,6 @@ services:
 
   database:
     image: mysql
-    ports:
-      - 3306:3306
     volumes:
       - './database/secureFileUpload:/var/lib/mysql'
       - './database/init/:/docker-entrypoint-initdb.d/:ro'
